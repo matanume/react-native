@@ -29,7 +29,6 @@ using namespace facebook::react;
   BOOL _isFullscreen;
 }
 
-@synthesize bridge = _bridge;
 @synthesize moduleRegistry = _moduleRegistry;
 
 RCT_EXPORT_MODULE()
@@ -58,7 +57,7 @@ RCT_EXPORT_MODULE()
                                                name:UIApplicationDidChangeStatusBarOrientationNotification
                                              object:nil];
 
-  _currentInterfaceDimensions = RCTExportedDimensions(_moduleRegistry, _bridge);
+  _currentInterfaceDimensions = RCTExportedDimensions(_moduleRegistry);
 
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(interfaceOrientationDidChange)
@@ -97,16 +96,15 @@ static BOOL RCTIsIPhoneX()
   return isIPhoneX;
 }
 
-static NSDictionary *RCTExportedDimensions(RCTModuleRegistry *moduleRegistry, RCTBridge *bridge)
+static NSDictionary *RCTExportedDimensions(RCTModuleRegistry *moduleRegistry)
 {
   RCTAssertMainQueue();
   RCTDimensions dimensions;
   if (moduleRegistry) {
-    RCTAccessibilityManager *accessibilityManager =
-        (RCTAccessibilityManager *)[moduleRegistry moduleForName:"AccessibilityManager"];
-    dimensions = RCTGetDimensions(accessibilityManager ? accessibilityManager.multiplier : 1.0);
+    dimensions = RCTGetDimensions(
+        ((RCTAccessibilityManager *)[moduleRegistry moduleForName:"AccessibilityManager"]).multiplier ?: 1.0);
   } else {
-    RCTAssert(false, @"ModuleRegistry must be set to properly init dimensions. Bridge exists: %d", bridge != nil);
+    RCTAssert(false, @"ModuleRegistry must be set to properly init dimensions.");
   }
   __typeof(dimensions.window) window = dimensions.window;
   NSDictionary<NSString *, NSNumber *> *dimsWindow = @{
@@ -134,10 +132,9 @@ static NSDictionary *RCTExportedDimensions(RCTModuleRegistry *moduleRegistry, RC
 {
   __block NSDictionary<NSString *, id> *constants;
   RCTModuleRegistry *moduleRegistry = _moduleRegistry;
-  RCTBridge *bridge = _bridge;
   RCTUnsafeExecuteOnMainQueueSync(^{
     constants = @{
-      @"Dimensions" : RCTExportedDimensions(moduleRegistry, bridge),
+      @"Dimensions" : RCTExportedDimensions(moduleRegistry),
       // Note:
       // This prop is deprecated and will be removed in a future release.
       // Please use this only for a quick and temporary solution.
@@ -152,14 +149,12 @@ static NSDictionary *RCTExportedDimensions(RCTModuleRegistry *moduleRegistry, RC
 - (void)didReceiveNewContentSizeMultiplier
 {
   RCTModuleRegistry *moduleRegistry = _moduleRegistry;
-  RCTBridge *bridge = _bridge;
   RCTExecuteOnMainQueue(^{
   // Report the event across the bridge.
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    [[moduleRegistry moduleForName:"EventDispatcher"]
-        sendDeviceEventWithName:@"didUpdateDimensions"
-                           body:RCTExportedDimensions(moduleRegistry, bridge)];
+    [[moduleRegistry moduleForName:"EventDispatcher"] sendDeviceEventWithName:@"didUpdateDimensions"
+                                                                         body:RCTExportedDimensions(moduleRegistry)];
 #pragma clang diagnostic pop
   });
 }
@@ -195,9 +190,9 @@ static NSDictionary *RCTExportedDimensions(RCTModuleRegistry *moduleRegistry, RC
   if ((isOrientationChanging || isResizingOrChangingToFullscreen) && RCTIsAppActive()) {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    [[_moduleRegistry moduleForName:"EventDispatcher"]
-        sendDeviceEventWithName:@"didUpdateDimensions"
-                           body:RCTExportedDimensions(_moduleRegistry, _bridge)];
+    [[_moduleRegistry moduleForName:"EventDispatcher"] sendDeviceEventWithName:@"didUpdateDimensions"
+                                                                          body:RCTExportedDimensions(_moduleRegistry)];
+
     // We only want to track the current _currentInterfaceOrientation and _isFullscreen only
     // when it happens and only when it is published.
     _currentInterfaceOrientation = nextOrientation;
@@ -216,7 +211,7 @@ static NSDictionary *RCTExportedDimensions(RCTModuleRegistry *moduleRegistry, RC
 
 - (void)_interfaceFrameDidChange
 {
-  NSDictionary *nextInterfaceDimensions = RCTExportedDimensions(_moduleRegistry, _bridge);
+  NSDictionary *nextInterfaceDimensions = RCTExportedDimensions(_moduleRegistry);
 
   // update and publish the even only when the app is in active state
   if (!([nextInterfaceDimensions isEqual:_currentInterfaceDimensions]) && RCTIsAppActive()) {

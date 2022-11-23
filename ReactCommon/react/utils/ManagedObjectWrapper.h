@@ -9,12 +9,8 @@
 
 #include <react/debug/react_native_assert.h>
 
-#if defined(__APPLE__)
-#include <TargetConditionals.h>
-#endif
-
 #if defined(__OBJC__) && defined(__cplusplus)
-#if TARGET_OS_MAC
+#if TARGET_OS_MAC && TARGET_OS_IPHONE
 
 #include <memory>
 

@@ -9,16 +9,15 @@
 
 #include <functional>
 #include <limits>
-#include <optional>
 
+#include <butter/optional.h>
 #include <folly/Hash.h>
 #include <react/renderer/attributedstring/primitives.h>
 #include <react/renderer/core/LayoutPrimitives.h>
 #include <react/renderer/core/ReactPrimitives.h>
 #include <react/renderer/debug/DebugStringConvertible.h>
 #include <react/renderer/graphics/Color.h>
-#include <react/renderer/graphics/Float.h>
-#include <react/renderer/graphics/Size.h>
+#include <react/renderer/graphics/Geometry.h>
 
 namespace facebook {
 namespace react {
@@ -47,40 +46,38 @@ class TextAttributes : public DebugStringConvertible {
   std::string fontFamily{""};
   Float fontSize{std::numeric_limits<Float>::quiet_NaN()};
   Float fontSizeMultiplier{std::numeric_limits<Float>::quiet_NaN()};
-  std::optional<FontWeight> fontWeight{};
-  std::optional<FontStyle> fontStyle{};
-  std::optional<FontVariant> fontVariant{};
-  std::optional<bool> allowFontScaling{};
-  std::optional<DynamicTypeRamp> dynamicTypeRamp{};
+  butter::optional<FontWeight> fontWeight{};
+  butter::optional<FontStyle> fontStyle{};
+  butter::optional<FontVariant> fontVariant{};
+  butter::optional<bool> allowFontScaling{};
   Float letterSpacing{std::numeric_limits<Float>::quiet_NaN()};
-  std::optional<TextTransform> textTransform{};
+  butter::optional<TextTransform> textTransform{};
 
   // Paragraph Styles
   Float lineHeight{std::numeric_limits<Float>::quiet_NaN()};
-  std::optional<TextAlignment> alignment{};
-  std::optional<WritingDirection> baseWritingDirection{};
-  std::optional<LineBreakStrategy> lineBreakStrategy{};
+  butter::optional<TextAlignment> alignment{};
+  butter::optional<WritingDirection> baseWritingDirection{};
 
   // Decoration
   SharedColor textDecorationColor{};
-  std::optional<TextDecorationLineType> textDecorationLineType{};
-  std::optional<TextDecorationStyle> textDecorationStyle{};
+  butter::optional<TextDecorationLineType> textDecorationLineType{};
+  butter::optional<TextDecorationStyle> textDecorationStyle{};
 
   // Shadow
   // TODO: Use `Point` type instead of `Size` for `textShadowOffset` attribute.
-  std::optional<Size> textShadowOffset{};
+  butter::optional<Size> textShadowOffset{};
   Float textShadowRadius{std::numeric_limits<Float>::quiet_NaN()};
   SharedColor textShadowColor{};
 
   // Special
-  std::optional<bool> isHighlighted{};
+  butter::optional<bool> isHighlighted{};
 
   // TODO T59221129: document where this value comes from and how it is set.
   // It's not clear if this is being used properly, or if it's being set at all.
   // Currently, it is intentionally *not* being set as part of BaseTextProps
   // construction.
-  std::optional<LayoutDirection> layoutDirection{};
-  std::optional<AccessibilityRole> accessibilityRole{};
+  butter::optional<LayoutDirection> layoutDirection{};
+  butter::optional<AccessibilityRole> accessibilityRole{};
 
 #pragma mark - Operations
 
@@ -124,7 +121,6 @@ struct hash<facebook::react::TextAttributes> {
         textAttributes.lineHeight,
         textAttributes.alignment,
         textAttributes.baseWritingDirection,
-        textAttributes.lineBreakStrategy,
         textAttributes.textDecorationColor,
         textAttributes.textDecorationLineType,
         textAttributes.textDecorationStyle,

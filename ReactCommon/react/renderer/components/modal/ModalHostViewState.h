@@ -8,6 +8,7 @@
 #pragma once
 
 #include <react/renderer/graphics/Float.h>
+#include <react/renderer/graphics/Geometry.h>
 #include <react/renderer/graphics/conversions.h>
 
 #ifdef ANDROID
@@ -20,7 +21,7 @@ namespace facebook {
 namespace react {
 
 /*
- * State for <ModalHostView> component.
+ * State for <BottomSheetView> component.
  */
 class ModalHostViewState final {
  public:

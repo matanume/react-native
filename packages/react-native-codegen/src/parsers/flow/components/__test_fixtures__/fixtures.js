@@ -6,9 +6,8 @@
  *
  * @flow strict-local
  * @format
+ * @lint-ignore-every LICENSELINT
  */
-
-// @licenselint-loose-mode
 
 'use strict';
 
@@ -871,13 +870,13 @@ type NativeType = HostComponent<ModuleProps>;
 interface NativeCommands {
   +handleRootTag: (viewRef: React.ElementRef<NativeType>, rootTag: RootTag) => void;
   +hotspotUpdate: (viewRef: React.ElementRef<NativeType>, x: Int32, y: Int32) => void;
-  scrollTo(
+  +scrollTo: (
     viewRef: React.ElementRef<NativeType>,
     x: Float,
     y: Int32,
     z: Double,
     animated: boolean,
-  ): void;
+  ) => void;
 }
 
 export const Commands = codegenNativeCommands<NativeCommands>({
@@ -939,7 +938,7 @@ export default (codegenNativeComponent<ModuleProps>(
 ): NativeType);
 `;
 
-const COMMANDS_EVENTS_TYPES_EXPORTED = `
+const COMMANDS_AND_EVENTS_TYPES_EXPORTED = `
 /**
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
@@ -1009,7 +1008,7 @@ module.exports = {
   EVENTS_DEFINED_INLINE_WITH_ALL_TYPES,
   EVENTS_DEFINED_AS_NULL_INLINE,
   PROPS_AND_EVENTS_TYPES_EXPORTED,
-  COMMANDS_EVENTS_TYPES_EXPORTED,
+  COMMANDS_AND_EVENTS_TYPES_EXPORTED,
   COMMANDS_DEFINED_WITH_ALL_TYPES,
   PROPS_AS_EXTERNAL_TYPES,
   COMMANDS_WITH_EXTERNAL_TYPES,

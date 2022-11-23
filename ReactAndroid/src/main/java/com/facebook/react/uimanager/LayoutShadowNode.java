@@ -224,30 +224,6 @@ public class LayoutShadowNode extends ReactShadowNodeImpl {
     super.setFlexGrow(flexGrow);
   }
 
-  @ReactProp(name = ViewProps.ROW_GAP, defaultFloat = YogaConstants.UNDEFINED)
-  public void setRowGap(float rowGap) {
-    if (isVirtual()) {
-      return;
-    }
-    super.setRowGap(PixelUtil.toPixelFromDIP(rowGap));
-  }
-
-  @ReactProp(name = ViewProps.COLUMN_GAP, defaultFloat = YogaConstants.UNDEFINED)
-  public void setColumnGap(float columnGap) {
-    if (isVirtual()) {
-      return;
-    }
-    super.setColumnGap(PixelUtil.toPixelFromDIP(columnGap));
-  }
-
-  @ReactProp(name = ViewProps.GAP, defaultFloat = YogaConstants.UNDEFINED)
-  public void setGap(float gap) {
-    if (isVirtual()) {
-      return;
-    }
-    super.setGap(PixelUtil.toPixelFromDIP(gap));
-  }
-
   @ReactProp(name = ViewProps.FLEX_SHRINK, defaultFloat = 0f)
   public void setFlexShrink(float flexShrink) {
     if (isVirtual()) {
@@ -832,19 +808,19 @@ public class LayoutShadowNode extends ReactShadowNodeImpl {
     super.setShouldNotifyOnLayout(shouldNotifyOnLayout);
   }
 
-  @ReactProp(name = "onPointerEnter")
+  @ReactProp(name = "pointerenter")
   public void setShouldNotifyPointerEnter(boolean value) {
     // This method exists to inject Native View configs in RN Android VR
     // DO NOTHING
   }
 
-  @ReactProp(name = "onPointerLeave")
+  @ReactProp(name = "pointerleave")
   public void setShouldNotifyPointerLeave(boolean value) {
     // This method exists to inject Native View configs in RN Android VR
     // DO NOTHING
   }
 
-  @ReactProp(name = "onPointerMove")
+  @ReactProp(name = "pointermove")
   public void setShouldNotifyPointerMove(boolean value) {
     // This method exists to inject Native View configs in RN Android VR
     // DO NOTHING

@@ -12,14 +12,7 @@
 
 import type {RNTesterModuleInfo} from '../types/RNTesterTypes';
 
-import ReactNativeFeatureFlags from 'react-native/Libraries/ReactNative/ReactNativeFeatureFlags';
-
 const Components: Array<RNTesterModuleInfo> = [
-  {
-    key: 'DrawerLayoutAndroid',
-    category: 'UI',
-    module: require('../examples/DrawerLayoutAndroid/DrawerLayoutAndroidExample'),
-  },
   {
     key: 'ActivityIndicatorExample',
     category: 'UI',
@@ -34,6 +27,7 @@ const Components: Array<RNTesterModuleInfo> = [
     key: 'FlatListExampleIndex',
     module: require('../examples/FlatList/FlatListExampleIndex').default,
     category: 'ListView',
+    supportsTVOS: true,
   },
   {
     key: 'ImageExample',
@@ -146,7 +140,7 @@ const APIs: Array<RNTesterModuleInfo> = [
   {
     key: 'AlertExample',
     category: 'UI',
-    module: require('../examples/Alert/AlertExample').default,
+    module: require('../examples/Alert/AlertExample'),
   },
   {
     key: 'AnimatedIndex',
@@ -187,11 +181,6 @@ const APIs: Array<RNTesterModuleInfo> = [
     key: 'Dimensions',
     category: 'UI',
     module: require('../examples/Dimensions/DimensionsExample'),
-  },
-  {
-    key: 'Keyboard',
-    category: 'Basic',
-    module: require('../examples/Keyboard/KeyboardExample').default,
   },
   {
     key: 'LayoutEventsExample',
@@ -283,23 +272,13 @@ const APIs: Array<RNTesterModuleInfo> = [
     category: 'Basic',
     module: require('../examples/XHR/XHRExample'),
   },
-  {
+];
+
+if (global.__turboModuleProxy) {
+  APIs.push({
     key: 'TurboModuleExample',
     category: 'Basic',
     module: require('../examples/TurboModule/TurboModuleExample'),
-  },
-  {
-    key: 'TurboCxxModuleExample',
-    category: 'Basic',
-    module: require('../examples/TurboModule/TurboCxxModuleExample'),
-  },
-];
-
-if (ReactNativeFeatureFlags.shouldEmitW3CPointerEvents()) {
-  APIs.push({
-    key: 'W3C PointerEvents',
-    category: 'Experimental',
-    module: require('../examples/Experimental/W3CPointerEventsExample').default,
   });
 }
 

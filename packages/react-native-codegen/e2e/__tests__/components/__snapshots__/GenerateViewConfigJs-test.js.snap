@@ -200,7 +200,6 @@ Map {
 'use strict';
 
 const NativeComponentRegistry = require('react-native/Libraries/NativeComponent/NativeComponentRegistry');
-const {ConditionallyIgnoredEventHandlers} = require('react-native/Libraries/NativeComponent/ViewConfigIgnore');
 
 let nativeComponentName = 'EventNestedObjectPropsNativeComponentView';
 
@@ -219,10 +218,6 @@ export const __INTERNAL_VIEW_CONFIG = {
 
   validAttributes: {
     disabled: true,
-
-    ...ConditionallyIgnoredEventHandlers({
-      onChange: true,
-    }),
   },
 };
 
@@ -248,7 +243,6 @@ Map {
 'use strict';
 
 const NativeComponentRegistry = require('react-native/Libraries/NativeComponent/NativeComponentRegistry');
-const {ConditionallyIgnoredEventHandlers} = require('react-native/Libraries/NativeComponent/ViewConfigIgnore');
 
 let nativeComponentName = 'EventPropsNativeComponentView';
 
@@ -295,15 +289,6 @@ export const __INTERNAL_VIEW_CONFIG = {
 
   validAttributes: {
     disabled: true,
-
-    ...ConditionallyIgnoredEventHandlers({
-      onChange: true,
-      onEventDirect: true,
-      onEventDirectWithPaperName: true,
-      onOrientationChange: true,
-      onEnd: true,
-      onEventBubblingWithPaperName: true,
-    }),
   },
 };
 
@@ -441,7 +426,6 @@ Map {
 'use strict';
 
 const NativeComponentRegistry = require('react-native/Libraries/NativeComponent/NativeComponentRegistry');
-const {ConditionallyIgnoredEventHandlers} = require('react-native/Libraries/NativeComponent/ViewConfigIgnore');
 
 let nativeComponentName = 'RCTInterfaceOnlyComponent';
 
@@ -460,10 +444,6 @@ export const __INTERNAL_VIEW_CONFIG = {
 
   validAttributes: {
     title: true,
-
-    ...ConditionallyIgnoredEventHandlers({
-      onChange: true,
-    }),
   },
 };
 

@@ -241,6 +241,9 @@ typedef NS_ENUM(NSInteger, FBTestSnapshotFileNameType) {
   if ([[UIScreen mainScreen] scale] > 1.0) {
     fileName = [fileName stringByAppendingFormat:@"@%.fx", [[UIScreen mainScreen] scale]];
   }
+#if TARGET_OS_TV
+  fileName = [fileName stringByAppendingString:@"_tvOS"];
+#endif
   fileName = [fileName stringByAppendingPathExtension:@"png"];
   return fileName;
 }
@@ -322,14 +325,23 @@ typedef NS_ENUM(NSInteger, FBTestSnapshotFileNameType) {
   NSAssert1(CGRectGetWidth(bounds), @"Zero width for view %@", view);
   NSAssert1(CGRectGetHeight(bounds), @"Zero height for view %@", view);
 
-  UIGraphicsImageRendererFormat *const rendererFormat = [UIGraphicsImageRendererFormat defaultFormat];
-  UIGraphicsImageRenderer *const renderer = [[UIGraphicsImageRenderer alloc] initWithSize:bounds.size
-                                                                                   format:rendererFormat];
+  UIGraphicsBeginImageContextWithOptions(bounds.size, NO, 0);
+  CGContextRef context = UIGraphicsGetCurrentContext();
+  NSAssert1(context, @"Could not generate context for view %@", view);
 
-  return [renderer imageWithActions:^(UIGraphicsImageRendererContext *_Nonnull context) {
+  UIGraphicsPushContext(context);
+  CGContextSaveGState(context);
+  {
     BOOL success = [view drawViewHierarchyInRect:bounds afterScreenUpdates:YES];
     NSAssert1(success, @"Could not create snapshot for view %@", view);
-  }];
+  }
+  CGContextRestoreGState(context);
+  UIGraphicsPopContext();
+
+  UIImage *snapshot = UIGraphicsGetImageFromCurrentImageContext();
+  UIGraphicsEndImageContext();
+
+  return snapshot;
 }
 
 @end

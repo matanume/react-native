@@ -10,30 +10,21 @@
 
 'use strict';
 
+const UIManager = require('../ReactNative/UIManager');
 import type {Spec as FabricUIManagerSpec} from '../ReactNative/FabricUIManager';
 import type {
   LayoutAnimationConfig as LayoutAnimationConfig_,
-  LayoutAnimationProperty,
   LayoutAnimationType,
+  LayoutAnimationProperty,
 } from '../Renderer/shims/ReactNativeTypes';
 
-import ReactNativeFeatureFlags from '../ReactNative/ReactNativeFeatureFlags';
 import Platform from '../Utilities/Platform';
-
-const UIManager = require('../ReactNative/UIManager');
 
 // Reexport type
 export type LayoutAnimationConfig = LayoutAnimationConfig_;
 
 type OnAnimationDidEndCallback = () => void;
 type OnAnimationDidFailCallback = () => void;
-
-let isLayoutAnimationEnabled: boolean =
-  ReactNativeFeatureFlags.isLayoutAnimationEnabled();
-
-function setEnabled(value: boolean) {
-  isLayoutAnimationEnabled = isLayoutAnimationEnabled;
-}
 
 /**
  * Configures the next commit to be animated.
@@ -49,10 +40,6 @@ function configureNext(
   onAnimationDidFail?: OnAnimationDidFailCallback,
 ) {
   if (Platform.isTesting) {
-    return;
-  }
-
-  if (!isLayoutAnimationEnabled) {
     return;
   }
 
@@ -194,7 +181,6 @@ const LayoutAnimation = {
   spring: (configureNext.bind(null, Presets.spring): (
     onAnimationDidEnd?: OnAnimationDidEndCallback,
   ) => void),
-  setEnabled,
 };
 
 module.exports = LayoutAnimation;

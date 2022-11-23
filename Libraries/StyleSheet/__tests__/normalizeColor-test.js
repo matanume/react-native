@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @format
- * @oncall react_native
+ * @emails oncall+react_native
  */
 
 'use strict';
@@ -37,12 +37,7 @@ describe('iOS', () => {
     it('should normalize iOS Dynamic colors with named colors', () => {
       const color = DynamicColorIOS({light: 'black', dark: 'white'});
       const normalizedColor = normalizeColor(color);
-      const expectedColor = {
-        dynamic: {
-          light: normalizeColor('black'),
-          dark: normalizeColor('white'),
-        },
-      };
+      const expectedColor = {dynamic: {light: 'black', dark: 'white'}};
       expect(normalizedColor).toEqual(expectedColor);
     });
 
@@ -56,10 +51,10 @@ describe('iOS', () => {
       const normalizedColor = normalizeColor(color);
       const expectedColor = {
         dynamic: {
-          light: normalizeColor('black'),
-          dark: normalizeColor('white'),
-          highContrastLight: normalizeColor('red'),
-          highContrastDark: normalizeColor('blue'),
+          light: 'black',
+          dark: 'white',
+          highContrastLight: 'red',
+          highContrastDark: 'blue',
         },
       };
       expect(normalizedColor).toEqual(expectedColor);

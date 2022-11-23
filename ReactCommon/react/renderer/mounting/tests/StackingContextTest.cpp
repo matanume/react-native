@@ -21,7 +21,8 @@
 #include <react/renderer/mounting/ShadowViewMutation.h>
 #include <react/renderer/mounting/stubs.h>
 
-namespace facebook::react {
+namespace facebook {
+namespace react {
 
 class StackingContextTest : public ::testing::Test {
  protected:
@@ -157,7 +158,7 @@ class StackingContextTest : public ::testing::Test {
     rootShadowNode_ =
         std::static_pointer_cast<RootShadowNode>(rootShadowNode_->cloneTree(
             node->getFamily(), [&](ShadowNode const &oldShadowNode) {
-              auto viewProps = std::make_shared<ViewShadowNodeProps>();
+              auto viewProps = std::make_shared<ViewProps>();
               callback(*viewProps);
               return oldShadowNode.clone(ShadowNodeFragment{viewProps});
             }));
@@ -782,4 +783,5 @@ TEST_F(StackingContextTest, zIndexAndFlattenedNodes) {
   });
 }
 
-} // namespace facebook::react
+} // namespace react
+} // namespace facebook

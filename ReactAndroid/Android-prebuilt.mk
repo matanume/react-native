@@ -29,12 +29,12 @@ LOCAL_SRC_FILES := $(REACT_NDK_EXPORT_DIR)/$(TARGET_ARCH_ABI)/libfb.so
 LOCAL_EXPORT_C_INCLUDES := $(FIRST_PARTY_NDK_DIR)/fb/include
 include $(PREBUILT_SHARED_LIBRARY)
 
-# folly_runtime
+# folly_json
 include $(CLEAR_VARS)
-LOCAL_MODULE := folly_runtime
-LOCAL_SRC_FILES := $(REACT_NDK_EXPORT_DIR)/$(TARGET_ARCH_ABI)/libfolly_runtime.so
+LOCAL_MODULE := folly_json
+LOCAL_SRC_FILES := $(REACT_NDK_EXPORT_DIR)/$(TARGET_ARCH_ABI)/libfolly_json.so
 LOCAL_EXPORT_C_INCLUDES := \
-  $(THIRD_PARTY_NDK_DIR)/boost/boost_1_76_0 \
+  $(THIRD_PARTY_NDK_DIR)/boost/boost_1_63_0 \
   $(THIRD_PARTY_NDK_DIR)/double-conversion \
   $(THIRD_PARTY_NDK_DIR)/folly
 # Note: Sync with folly/Android.mk.
@@ -47,6 +47,13 @@ FOLLY_FLAGS := \
   -DFOLLY_HAVE_XSI_STRERROR_R=1
 LOCAL_CFLAGS += $(FOLLY_FLAGS)
 LOCAL_EXPORT_CPPFLAGS := $(FOLLY_FLAGS)
+include $(PREBUILT_SHARED_LIBRARY)
+
+# folly_futures
+include $(CLEAR_VARS)
+LOCAL_MODULE := folly_futures
+LOCAL_SRC_FILES := $(REACT_NDK_EXPORT_DIR)/$(TARGET_ARCH_ABI)/libfolly_futures.so
+LOCAL_SHARED_LIBRARIES := liblibfolly_json
 include $(PREBUILT_SHARED_LIBRARY)
 
 # glog
@@ -75,12 +82,11 @@ LOCAL_MODULE := react_nativemodule_core
 LOCAL_SRC_FILES := $(REACT_NDK_EXPORT_DIR)/$(TARGET_ARCH_ABI)/libreact_nativemodule_core.so
 LOCAL_EXPORT_C_INCLUDES := \
   $(REACT_ANDROID_SRC_DIR)/jni \
-  $(REACT_COMMON_DIR) \
   $(REACT_COMMON_DIR)/callinvoker \
   $(REACT_COMMON_DIR)/jsi \
   $(REACT_COMMON_DIR)/react/nativemodule/core \
   $(REACT_COMMON_DIR)/react/nativemodule/core/platform/android
-LOCAL_SHARED_LIBRARIES := libfolly_runtime
+LOCAL_SHARED_LIBRARIES := libfolly_json
 include $(PREBUILT_SHARED_LIBRARY)
 
 # turbomodulejsijni
@@ -88,7 +94,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := turbomodulejsijni
 LOCAL_SRC_FILES := $(REACT_NDK_EXPORT_DIR)/$(TARGET_ARCH_ABI)/libturbomodulejsijni.so
 LOCAL_EXPORT_C_INCLUDES := \
-  $(REACT_ANDROID_SRC_DIR)/jni/react/turbomodule
+  $(REACT_ANDROID_SRC_DIR)/java/com/facebook/react/turbomodule/core/jni
 include $(PREBUILT_SHARED_LIBRARY)
 
 # react_render_core
@@ -114,7 +120,7 @@ LOCAL_MODULE := react_debug
 LOCAL_SRC_FILES := $(REACT_NDK_EXPORT_DIR)/$(TARGET_ARCH_ABI)/libreact_debug.so
 LOCAL_EXPORT_C_INCLUDES := \
   $(REACT_COMMON_DIR)/react/debug
-LOCAL_SHARED_LIBRARIES := libfolly_runtime
+LOCAL_SHARED_LIBRARIES := libfolly_json
 include $(PREBUILT_SHARED_LIBRARY)
 
 # react_render_graphics
@@ -164,7 +170,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := fabricjni
 LOCAL_SRC_FILES := $(REACT_NDK_EXPORT_DIR)/$(TARGET_ARCH_ABI)/libfabricjni.so
 LOCAL_EXPORT_C_INCLUDES := \
-  $(REACT_ANDROID_SRC_DIR)/jni/react/fabricjni
+  $(REACT_ANDROID_SRC_DIR)/java/com/facebook/react/fabric/jni
 include $(PREBUILT_SHARED_LIBRARY)
 
 # react_render_componentregistry
@@ -173,14 +179,6 @@ LOCAL_MODULE := react_render_componentregistry
 LOCAL_SRC_FILES := $(REACT_NDK_EXPORT_DIR)/$(TARGET_ARCH_ABI)/libreact_render_componentregistry.so
 LOCAL_EXPORT_C_INCLUDES := \
   $(REACT_COMMON_DIR)/react/renderer/componentregistry
-include $(PREBUILT_SHARED_LIBRARY)
-
-# react_newarchdefaults
-include $(CLEAR_VARS)
-LOCAL_MODULE := react_newarchdefaults
-LOCAL_SRC_FILES := $(REACT_NDK_EXPORT_DIR)/$(TARGET_ARCH_ABI)/libreact_newarchdefaults.so
-LOCAL_EXPORT_C_INCLUDES := \
-  $(REACT_ANDROID_SRC_DIR)/jni/react/newarchdefaults
 include $(PREBUILT_SHARED_LIBRARY)
 
 # jsi

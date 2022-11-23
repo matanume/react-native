@@ -31,27 +31,12 @@
  *     * or otherwise `{major}.{minor}-stable`
  */
 
-const {exec, echo, exit} = require('shelljs');
-const {parseVersion} = require('./version-utils');
-const {
-  exitIfNotOnGit,
-  getCurrentCommit,
-  isTaggedLatest,
-} = require('./scm-utils');
-const {
-  generateAndroidArtifacts,
-  publishAndroidArtifactsToMaven,
-} = require('./release-utils');
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
+const {exec, echo, exit, test} = require('shelljs');
 const yargs = require('yargs');
+const {parseVersion, isTaggedLatest} = require('./version-utils');
 
 const buildTag = process.env.CIRCLE_TAG;
 const otp = process.env.NPM_CONFIG_OTP;
-const tmpPublishingFolder = fs.mkdtempSync(
-  path.join(os.tmpdir(), 'rn-publish-'),
-);
 
 const argv = yargs
   .option('n', {
@@ -63,30 +48,14 @@ const argv = yargs
     alias: 'dry-run',
     type: 'boolean',
     default: false,
-  })
-  .option('r', {
-    alias: 'release',
-    type: 'boolean',
-    default: false,
-  })
-  .strict().argv;
+  }).argv;
 const nightlyBuild = argv.nightly;
 const dryRunBuild = argv.dryRun;
-const releaseBuild = argv.release;
-const isCommitly = nightlyBuild || dryRunBuild;
-
-const buildType = releaseBuild
-  ? 'release'
-  : nightlyBuild
-  ? 'nightly'
-  : 'dry-run';
-
-if (!argv.help) {
-  echo(`The temp publishing folder is ${tmpPublishingFolder}`);
-}
 
 // 34c034298dc9cad5a4553964a5a324450fda0385
-const currentCommit = getCurrentCommit();
+const currentCommit = exec('git rev-parse HEAD', {
+  silent: true,
+}).stdout.trim();
 const shortCommit = currentCommit.slice(0, 9);
 
 const rawVersion =
@@ -104,7 +73,7 @@ let version,
   minor,
   prerelease = null;
 try {
-  ({version, major, minor, prerelease} = parseVersion(rawVersion, buildType));
+  ({version, major, minor, prerelease} = parseVersion(rawVersion));
 } catch (e) {
   echo(e.message);
   exit(1);
@@ -127,22 +96,41 @@ if (dryRunBuild) {
 
 // Bump version number in various files (package.json, gradle.properties etc)
 // For stable, pre-release releases, we rely on CircleCI job `prepare_package_for_release` to handle this
-if (isCommitly) {
+if (nightlyBuild || dryRunBuild) {
   if (
-    exec(
-      `node scripts/set-rn-version.js --to-version ${releaseVersion} --build-type ${buildType}`,
-    ).code
+    exec(`node scripts/set-rn-version.js --to-version ${releaseVersion}`).code
   ) {
     echo(`Failed to set version number to ${releaseVersion}`);
     exit(1);
   }
 }
 
-generateAndroidArtifacts(releaseVersion, tmpPublishingFolder);
+// -------- Generating Android Artifacts with JavaDoc
+if (exec('./gradlew :ReactAndroid:installArchives').code) {
+  echo('Could not generate artifacts');
+  exit(1);
+}
 
-// Write version number to the build folder
-const releaseVersionFile = path.join('build', '.version');
-fs.writeFileSync(releaseVersionFile, releaseVersion);
+// undo uncommenting javadoc setting
+exec('git checkout ReactAndroid/gradle.properties');
+
+echo('Generated artifacts for Maven');
+
+let artifacts = ['.aar', '.pom'].map(suffix => {
+  return `react-native-${releaseVersion}${suffix}`;
+});
+
+artifacts.forEach(name => {
+  if (
+    !test(
+      '-e',
+      `./android/com/facebook/react/react-native/${releaseVersion}/${name}`,
+    )
+  ) {
+    echo(`file ${name} was not generated`);
+    exit(1);
+  }
+});
 
 if (dryRunBuild) {
   echo('Skipping `npm publish` because --dry-run is set.');
@@ -150,14 +138,7 @@ if (dryRunBuild) {
 }
 
 // Running to see if this commit has been git tagged as `latest`
-const isLatest = exitIfNotOnGit(
-  () => isTaggedLatest(currentCommit),
-  'Not in git. We do not want to publish anything',
-);
-
-// We first publish on Maven Central all the necessary artifacts.
-// NPM publishing is done just after.
-publishAndroidArtifactsToMaven(releaseVersion, nightlyBuild);
+const isLatest = isTaggedLatest(currentCommit);
 
 const releaseBranch = `${major}.${minor}-stable`;
 

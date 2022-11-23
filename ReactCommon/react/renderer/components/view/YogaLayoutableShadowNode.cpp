@@ -20,11 +20,12 @@
 #include <limits>
 #include <memory>
 
-namespace facebook::react {
+namespace facebook {
+namespace react {
 
 static int FabricDefaultYogaLog(
-    const YGConfigRef /*unused*/,
-    const YGNodeRef /*unused*/,
+    const YGConfigRef,
+    const YGNodeRef,
     YGLogLevel level,
     const char *format,
     va_list args) {
@@ -249,7 +250,7 @@ void YogaLayoutableShadowNode::appendChild(
   // (e.g. RCTRawText). This used to throw an error, but we are ignoring it
   // because we want core library components to be fault-tolerant and degrade
   // gracefully. A soft error will be emitted from JavaScript.
-  if (traitCast<YogaLayoutableShadowNode const *>(childNode.get()) != nullptr) {
+  if (traitCast<YogaLayoutableShadowNode const *>(childNode.get())) {
     // Appending the Yoga node.
     appendYogaChild(*childNode);
 
@@ -316,62 +317,13 @@ void YogaLayoutableShadowNode::updateYogaProps() {
   ensureUnsealed();
 
   auto props = static_cast<YogaStylableProps const &>(*props_);
-  auto styleResult = applyAliasedProps(props.yogaStyle, props);
 
   // Resetting `dirty` flag only if `yogaStyle` portion of `Props` was changed.
-  if (!yogaNode_.isDirty() && (styleResult != yogaNode_.getStyle())) {
+  if (!yogaNode_.isDirty() && (props.yogaStyle != yogaNode_.getStyle())) {
     yogaNode_.setDirty(true);
   }
 
-  yogaNode_.setStyle(styleResult);
-}
-
-/*static*/ YGStyle YogaLayoutableShadowNode::applyAliasedProps(
-    const YGStyle &baseStyle,
-    const YogaStylableProps &props) {
-  YGStyle result{baseStyle};
-
-  // Aliases with precedence
-  if (!props.marginInline.isUndefined()) {
-    result.margin()[YGEdgeHorizontal] = props.marginInline;
-  }
-  if (!props.marginInlineStart.isUndefined()) {
-    result.margin()[YGEdgeStart] = props.marginInlineStart;
-  }
-  if (!props.marginInlineEnd.isUndefined()) {
-    result.margin()[YGEdgeEnd] = props.marginInlineEnd;
-  }
-  if (!props.marginBlock.isUndefined()) {
-    result.margin()[YGEdgeVertical] = props.marginBlock;
-  }
-  if (!props.paddingInline.isUndefined()) {
-    result.padding()[YGEdgeHorizontal] = props.paddingInline;
-  }
-  if (!props.paddingInlineStart.isUndefined()) {
-    result.padding()[YGEdgeStart] = props.paddingInlineStart;
-  }
-  if (!props.paddingInlineEnd.isUndefined()) {
-    result.padding()[YGEdgeEnd] = props.paddingInlineEnd;
-  }
-  if (!props.paddingBlock.isUndefined()) {
-    result.padding()[YGEdgeVertical] = props.paddingBlock;
-  }
-
-  // Aliases without precedence
-  if (CompactValue(result.margin()[YGEdgeTop]).isUndefined()) {
-    result.margin()[YGEdgeTop] = props.marginBlockStart;
-  }
-  if (CompactValue(result.margin()[YGEdgeBottom]).isUndefined()) {
-    result.margin()[YGEdgeBottom] = props.marginBlockEnd;
-  }
-  if (CompactValue(result.padding()[YGEdgeTop]).isUndefined()) {
-    result.padding()[YGEdgeTop] = props.paddingBlockStart;
-  }
-  if (CompactValue(result.padding()[YGEdgeBottom]).isUndefined()) {
-    result.padding()[YGEdgeBottom] = props.paddingBlockEnd;
-  }
-
-  return result;
+  yogaNode_.setStyle(props.yogaStyle);
 }
 
 void YogaLayoutableShadowNode::setSize(Size size) const {
@@ -527,6 +479,7 @@ void YogaLayoutableShadowNode::layout(LayoutContext layoutContext) {
   react_native_assert(!yogaNode_.isDirty());
 
   auto contentFrame = Rect{};
+
   for (auto childYogaNode : yogaNode_.getChildren()) {
     auto &childNode =
         *static_cast<YogaLayoutableShadowNode *>(childYogaNode->getContext());
@@ -555,7 +508,7 @@ void YogaLayoutableShadowNode::layout(LayoutContext layoutContext) {
       // `newLayoutMetrics.frame` with `childNode.getLayoutMetrics().frame` to
       // detect if layout has not changed is not advised, please refer to
       // D22999891 for details.
-      if (layoutContext.affectedNodes != nullptr) {
+      if (layoutContext.affectedNodes) {
         layoutContext.affectedNodes->push_back(&childNode);
       }
 
@@ -568,36 +521,24 @@ void YogaLayoutableShadowNode::layout(LayoutContext layoutContext) {
 
     auto layoutMetricsWithOverflowInset = childNode.getLayoutMetrics();
     if (layoutMetricsWithOverflowInset.displayType != DisplayType::None) {
-      // The contentFrame should always union with existing child node layout +
-      // overflowInset. The transform may in a deferred animation and not
-      // applied yet.
       contentFrame.unionInPlace(insetBy(
           layoutMetricsWithOverflowInset.frame,
           layoutMetricsWithOverflowInset.overflowInset));
-
-      auto childTransform = childNode.getTransform();
-      if (childTransform != Transform::Identity()) {
-        // The child node's transform matrix will affect the parent node's
-        // contentFrame. We need to union with child node's after transform
-        // layout here.
-        contentFrame.unionInPlace(insetBy(
-            layoutMetricsWithOverflowInset.frame * childTransform,
-            layoutMetricsWithOverflowInset.overflowInset * childTransform));
-      }
     }
   }
 
   if (yogaNode_.getStyle().overflow() == YGOverflowVisible) {
-    // Note that the parent node's overflow layout is NOT affected by its
-    // transform matrix. That transform matrix is applied on the parent node as
-    // well as all of its child nodes, which won't cause changes on the
-    // overflowInset values. A special note on the scale transform -- the scaled
-    // layout may look like it's causing overflowInset changes, but it's purely
-    // cosmetic and will be handled by pixel density conversion logic later when
-    // render the view. The actual overflowInset value is not changed as if the
-    // transform is not happening here.
+    auto transform = getTransform();
+    auto transformedContentFrame = contentFrame;
+    if (Transform::Identity() != transform) {
+      // When animation uses native driver, Yoga has no knowledge of the
+      // animation. In case the content goes out from current container, we need
+      // to union the content frame with its transformed frame.
+      transformedContentFrame = contentFrame * getTransform();
+      transformedContentFrame.unionInPlace(contentFrame);
+    }
     layoutMetrics_.overflowInset =
-        calculateOverflowInset(layoutMetrics_.frame, contentFrame);
+        calculateOverflowInset(layoutMetrics_.frame, transformedContentFrame);
   } else {
     layoutMetrics_.overflowInset = {};
   }
@@ -694,8 +635,7 @@ void YogaLayoutableShadowNode::swapLeftAndRightInTree(
   for (auto &child : shadowNode.getChildren()) {
     auto const yogaLayoutableChild =
         traitCast<YogaLayoutableShadowNode const *>(child.get());
-    if ((yogaLayoutableChild != nullptr) &&
-        !yogaLayoutableChild->doesOwn(shadowNode)) {
+    if (yogaLayoutableChild && !yogaLayoutableChild->doesOwn(shadowNode)) {
       swapLeftAndRightInTree(*yogaLayoutableChild);
     }
   }
@@ -750,44 +690,44 @@ void YogaLayoutableShadowNode::swapLeftAndRightInViewProps(
   auto &props = const_cast<ViewProps &>(typedCasting);
 
   // Swap border node values, borderRadii, borderColors and borderStyles.
-  if (props.borderRadii.topLeft.has_value()) {
+  if (props.borderRadii.topLeft.hasValue()) {
     props.borderRadii.topStart = props.borderRadii.topLeft;
-    props.borderRadii.topLeft.reset();
+    props.borderRadii.topLeft.clear();
   }
 
-  if (props.borderRadii.bottomLeft.has_value()) {
+  if (props.borderRadii.bottomLeft.hasValue()) {
     props.borderRadii.bottomStart = props.borderRadii.bottomLeft;
-    props.borderRadii.bottomLeft.reset();
+    props.borderRadii.bottomLeft.clear();
   }
 
-  if (props.borderRadii.topRight.has_value()) {
+  if (props.borderRadii.topRight.hasValue()) {
     props.borderRadii.topEnd = props.borderRadii.topRight;
-    props.borderRadii.topRight.reset();
+    props.borderRadii.topRight.clear();
   }
 
-  if (props.borderRadii.bottomRight.has_value()) {
+  if (props.borderRadii.bottomRight.hasValue()) {
     props.borderRadii.bottomEnd = props.borderRadii.bottomRight;
-    props.borderRadii.bottomRight.reset();
+    props.borderRadii.bottomRight.clear();
   }
 
-  if (props.borderColors.left.has_value()) {
+  if (props.borderColors.left.hasValue()) {
     props.borderColors.start = props.borderColors.left;
-    props.borderColors.left.reset();
+    props.borderColors.left.clear();
   }
 
-  if (props.borderColors.right.has_value()) {
+  if (props.borderColors.right.hasValue()) {
     props.borderColors.end = props.borderColors.right;
-    props.borderColors.right.reset();
+    props.borderColors.right.clear();
   }
 
-  if (props.borderStyles.left.has_value()) {
+  if (props.borderStyles.left.hasValue()) {
     props.borderStyles.start = props.borderStyles.left;
-    props.borderStyles.left.reset();
+    props.borderStyles.left.clear();
   }
 
-  if (props.borderStyles.right.has_value()) {
+  if (props.borderStyles.right.hasValue()) {
     props.borderStyles.end = props.borderStyles.right;
-    props.borderStyles.right.reset();
+    props.borderStyles.right.clear();
   }
 
   YGStyle::Edges const &border = props.yogaStyle.border();
@@ -871,4 +811,5 @@ void YogaLayoutableShadowNode::ensureYogaChildrenAlighment() const {
 #endif
 }
 
-} // namespace facebook::react
+} // namespace react
+} // namespace facebook

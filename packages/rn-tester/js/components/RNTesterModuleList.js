@@ -24,8 +24,6 @@ const {
 
 import {RNTesterThemeContext} from './RNTesterTheme';
 
-/* $FlowFixMe[missing-local-annot] The type annotation(s) required by Flow's
- * LTI update could not be added via codemod */
 const ExampleModuleRow = ({
   onShowUnderlay,
   onHideUnderlay,
@@ -122,10 +120,9 @@ const RNTesterModuleList: React$AbstractComponent<any, void> = React.memo(
   ({sections, toggleBookmark, handleModuleCardPress}) => {
     const filter = ({example, filterRegex, category}: any) =>
       filterRegex.test(example.module.title) &&
-      (!category || example.category === category);
+      (!category || example.category === category) &&
+      (!Platform.isTV || example.supportsTVOS);
 
-    /* $FlowFixMe[missing-local-annot] The type annotation(s) required by
-     * Flow's LTI update could not be added via codemod */
     const renderListItem = ({item, section, separators}) => {
       return (
         <ExampleModuleRow
@@ -156,7 +153,6 @@ const RNTesterModuleList: React$AbstractComponent<any, void> = React.memo(
               automaticallyAdjustContentInsets={false}
               keyboardDismissMode="on-drag"
               renderSectionHeader={renderSectionHeader}
-              // eslint-disable-next-line react/no-unstable-nested-components
               ListFooterComponent={() => <View style={{height: 80}} />}
             />
           )}

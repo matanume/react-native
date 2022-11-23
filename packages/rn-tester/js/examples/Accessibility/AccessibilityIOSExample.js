@@ -17,7 +17,7 @@ const RNTesterBlock = require('../../components/RNTesterBlock');
 
 type Props = $ReadOnly<{||}>;
 class AccessibilityIOSExample extends React.Component<Props> {
-  render(): React.Node {
+  render() {
     return (
       <RNTesterBlock title="Accessibility iOS APIs">
         <View
@@ -54,9 +54,6 @@ class AccessibilityIOSExample extends React.Component<Props> {
           <Text>
             This view's children are hidden from the accessibility tree
           </Text>
-        </View>
-        <View accessible={true} accessibilityLanguage="it-IT">
-          <Text>This view's language should be `it-IT`</Text>
         </View>
       </RNTesterBlock>
     );

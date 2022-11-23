@@ -7,19 +7,12 @@
 
 #import "RCTView.h"
 
-#import <QuartzCore/QuartzCore.h>
-#import <React/RCTMockDef.h>
-
 #import "RCTAutoInsetsProtocol.h"
-#import "RCTBorderCurve.h"
 #import "RCTBorderDrawing.h"
 #import "RCTI18nUtil.h"
 #import "RCTLog.h"
 #import "RCTViewUtils.h"
 #import "UIView+React.h"
-
-RCT_MOCK_DEF(RCTView, RCTContentInsets);
-#define RCTContentInsets RCT_MOCK_USE(RCTView, RCTContentInsets)
 
 UIAccessibilityTraits const SwitchAccessibilityTrait = 0x20000000000001;
 
@@ -128,7 +121,6 @@ static NSString *RCTRecursiveAccessibilityLabel(UIView *view)
     _borderBottomRightRadius = -1;
     _borderBottomStartRadius = -1;
     _borderBottomEndRadius = -1;
-    _borderCurve = RCTBorderCurveCircular;
     _borderStyle = RCTBorderStyleSolid;
     _hitTestEdgeInsets = UIEdgeInsetsZero;
 
@@ -714,45 +706,33 @@ static CGFloat RCTDefaultIfNegativeTo(CGFloat defaultValue, CGFloat x)
   };
 }
 
-- (RCTBorderColors)borderColorsWithTraitCollection:(UITraitCollection *)traitCollection
+- (RCTBorderColors)borderColors
 {
   const BOOL isRTL = _reactLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft;
-
-  UIColor *directionAwareBorderLeftColor = nil;
-  UIColor *directionAwareBorderRightColor = nil;
 
   if ([[RCTI18nUtil sharedInstance] doLeftAndRightSwapInRTL]) {
     UIColor *borderStartColor = _borderStartColor ?: _borderLeftColor;
     UIColor *borderEndColor = _borderEndColor ?: _borderRightColor;
 
-    directionAwareBorderLeftColor = isRTL ? borderEndColor : borderStartColor;
-    directionAwareBorderRightColor = isRTL ? borderStartColor : borderEndColor;
-  } else {
-    directionAwareBorderLeftColor = (isRTL ? _borderEndColor : _borderStartColor) ?: _borderLeftColor;
-    directionAwareBorderRightColor = (isRTL ? _borderStartColor : _borderEndColor) ?: _borderRightColor;
+    UIColor *directionAwareBorderLeftColor = isRTL ? borderEndColor : borderStartColor;
+    UIColor *directionAwareBorderRightColor = isRTL ? borderStartColor : borderEndColor;
+
+    return (RCTBorderColors){
+        (_borderTopColor ?: _borderColor).CGColor,
+        (directionAwareBorderLeftColor ?: _borderColor).CGColor,
+        (_borderBottomColor ?: _borderColor).CGColor,
+        (directionAwareBorderRightColor ?: _borderColor).CGColor,
+    };
   }
 
-  UIColor *borderColor = _borderColor;
-  UIColor *borderTopColor = _borderTopColor;
-  UIColor *borderBottomColor = _borderBottomColor;
-
-#if defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 130000
-  if (@available(iOS 13.0, *)) {
-    borderColor = [borderColor resolvedColorWithTraitCollection:self.traitCollection];
-    borderTopColor = [borderTopColor resolvedColorWithTraitCollection:self.traitCollection];
-    directionAwareBorderLeftColor =
-        [directionAwareBorderLeftColor resolvedColorWithTraitCollection:self.traitCollection];
-    borderBottomColor = [borderBottomColor resolvedColorWithTraitCollection:self.traitCollection];
-    directionAwareBorderRightColor =
-        [directionAwareBorderRightColor resolvedColorWithTraitCollection:self.traitCollection];
-  }
-#endif
+  UIColor *directionAwareBorderLeftColor = isRTL ? _borderEndColor : _borderStartColor;
+  UIColor *directionAwareBorderRightColor = isRTL ? _borderStartColor : _borderEndColor;
 
   return (RCTBorderColors){
-      (borderTopColor ?: borderColor).CGColor,
-      (directionAwareBorderLeftColor ?: borderColor).CGColor,
-      (borderBottomColor ?: borderColor).CGColor,
-      (directionAwareBorderRightColor ?: borderColor).CGColor,
+    (_borderTopColor ?: _borderColor).CGColor,
+    (directionAwareBorderLeftColor ?: _borderLeftColor ?: _borderColor).CGColor,
+    (_borderBottomColor ?: _borderColor).CGColor,
+    (directionAwareBorderRightColor ?: _borderRightColor ?: _borderColor).CGColor,
   };
 }
 
@@ -778,7 +758,7 @@ static CGFloat RCTDefaultIfNegativeTo(CGFloat defaultValue, CGFloat x)
 
   const RCTCornerRadii cornerRadii = [self cornerRadii];
   const UIEdgeInsets borderInsets = [self bordersAsInsets];
-  const RCTBorderColors borderColors = [self borderColorsWithTraitCollection:self.traitCollection];
+  const RCTBorderColors borderColors = [self borderColors];
 
   BOOL useIOSBorderRendering = RCTCornerRadiiAreEqual(cornerRadii) && RCTBorderInsetsAreEqual(borderInsets) &&
       RCTBorderColorsAreEqual(borderColors) && _borderStyle == RCTBorderStyleSolid &&
@@ -948,20 +928,6 @@ setBorderColor() setBorderColor(Top) setBorderColor(Right) setBorderColor(Bottom
                     setBorderRadius(TopEnd) setBorderRadius(BottomLeft) setBorderRadius(BottomRight)
                         setBorderRadius(BottomStart) setBorderRadius(BottomEnd)
 
-#pragma mark - Border Curve
-
-#define setBorderCurve(side)                            \
-  -(void)setBorder##side##Curve : (RCTBorderCurve)curve \
-  {                                                     \
-    if (_border##side##Curve == curve) {                \
-      return;                                           \
-    }                                                   \
-    _border##side##Curve = curve;                       \
-    [self.layer setNeedsDisplay];                       \
-  }
-
-                            setBorderCurve()
-
 #pragma mark - Border Style
 
 #define setBorderStyle(side)                            \
@@ -974,6 +940,6 @@ setBorderColor() setBorderColor(Top) setBorderColor(Right) setBorderColor(Bottom
     [self.layer setNeedsDisplay];                       \
   }
 
-                                setBorderStyle()
+                            setBorderStyle()
 
-                                    @end
+                                @end

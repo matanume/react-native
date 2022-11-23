@@ -19,7 +19,8 @@
 
 #include "ShadowTreeDelegate.h"
 
-namespace facebook::react {
+namespace facebook {
+namespace react {
 
 using CommitStatus = ShadowTree::CommitStatus;
 using CommitMode = ShadowTree::CommitMode;
@@ -160,8 +161,8 @@ static ShadowNode::Unshared progressState(
 }
 
 static void updateMountedFlag(
-    const ShadowNode::ListOfShared &oldChildren,
-    const ShadowNode::ListOfShared &newChildren) {
+    const SharedShadowNodeList &oldChildren,
+    const SharedShadowNodeList &newChildren) {
   // This is a simplified version of Diffing algorithm that only updates
   // `mounted` flag on `ShadowNode`s. The algorithm sets "mounted" flag before
   // "unmounted" to allow `ShadowNode` detect a situation where the node was
@@ -295,8 +296,8 @@ MountingCoordinator::Shared ShadowTree::getMountingCoordinator() const {
 }
 
 CommitStatus ShadowTree::commit(
-    const ShadowTreeCommitTransaction &transaction,
-    const CommitOptions &commitOptions) const {
+    ShadowTreeCommitTransaction transaction,
+    CommitOptions commitOptions) const {
   SystraceSection s("ShadowTree::commit");
 
   int attempts = 0;
@@ -316,8 +317,8 @@ CommitStatus ShadowTree::commit(
 }
 
 CommitStatus ShadowTree::tryCommit(
-    const ShadowTreeCommitTransaction &transaction,
-    const CommitOptions &commitOptions) const {
+    ShadowTreeCommitTransaction transaction,
+    CommitOptions commitOptions) const {
   SystraceSection s("ShadowTree::tryCommit");
 
   auto telemetry = TransactionTelemetry{};
@@ -432,10 +433,7 @@ void ShadowTree::commitEmptyTree() const {
 
 void ShadowTree::emitLayoutEvents(
     std::vector<LayoutableShadowNode const *> &affectedLayoutableNodes) const {
-  SystraceSection s(
-      "ShadowTree::emitLayoutEvents",
-      "affectedLayoutableNodes",
-      affectedLayoutableNodes.size());
+  SystraceSection s("ShadowTree::emitLayoutEvents");
 
   for (auto const *layoutableNode : affectedLayoutableNodes) {
     // Only instances of `ViewShadowNode` (and subclasses) are supported.
@@ -460,4 +458,5 @@ void ShadowTree::notifyDelegatesOfUpdates() const {
   delegate_.shadowTreeDidFinishTransaction(*this, mountingCoordinator_);
 }
 
-} // namespace facebook::react
+} // namespace react
+} // namespace facebook

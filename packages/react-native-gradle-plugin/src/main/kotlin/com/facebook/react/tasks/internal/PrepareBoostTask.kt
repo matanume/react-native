@@ -32,7 +32,7 @@ abstract class PrepareBoostTask : DefaultTask() {
       it.from(boostPath)
       it.from(project.file("src/main/jni/third-party/boost"))
       it.include(
-          "CMakeLists.txt",
+          "Android.mk",
           "boost_${boostVersion.get()}/boost/**/*.hpp",
           "boost/boost/**/*.hpp",
           "asm/**/*.S")

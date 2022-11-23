@@ -7,7 +7,8 @@
 
 #include "MountingTransaction.h"
 
-namespace facebook::react {
+namespace facebook {
+namespace react {
 
 using Number = MountingTransaction::Number;
 
@@ -29,7 +30,7 @@ ShadowViewMutationList MountingTransaction::getMutations() && {
   return std::move(mutations_);
 }
 
-TransactionTelemetry &MountingTransaction::getTelemetry() const {
+TransactionTelemetry const &MountingTransaction::getTelemetry() const {
   return telemetry_;
 }
 
@@ -41,4 +42,5 @@ Number MountingTransaction::getNumber() const {
   return number_;
 }
 
-} // namespace facebook::react
+} // namespace react
+} // namespace facebook

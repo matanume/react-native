@@ -6,12 +6,11 @@
  */
 
 #pragma once
-
-#ifdef __cplusplus
-
 #include "BitUtils.h"
 #include "YGFloatOptional.h"
 #include "Yoga-internal.h"
+
+using namespace facebook::yoga;
 
 struct YGLayout {
   std::array<float, 4> position = {};
@@ -86,5 +85,3 @@ public:
   bool operator==(YGLayout layout) const;
   bool operator!=(YGLayout layout) const { return !(*this == layout); }
 };
-
-#endif

@@ -7,11 +7,12 @@
 
 #include "ViewEventEmitter.h"
 
-namespace facebook::react {
+namespace facebook {
+namespace react {
 
 #pragma mark - Accessibility
 
-void ViewEventEmitter::onAccessibilityAction(std::string const &name) const {
+void ViewEventEmitter::onAccessibilityAction(const std::string &name) const {
   dispatchEvent("accessibilityAction", [name](jsi::Runtime &runtime) {
     auto payload = jsi::Object(runtime);
     payload.setProperty(runtime, "actionName", name);
@@ -114,4 +115,5 @@ void ViewEventEmitter::onLayout(const LayoutMetrics &layoutMetrics) const {
       EventPriority::AsynchronousUnbatched);
 }
 
-} // namespace facebook::react
+} // namespace react
+} // namespace facebook

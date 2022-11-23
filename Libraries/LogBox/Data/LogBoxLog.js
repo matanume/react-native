@@ -4,19 +4,19 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @flow strict
+ * @flow strict-local
  * @format
  */
 
-import type {Stack} from './LogBoxSymbolication';
+import * as LogBoxSymbolication from './LogBoxSymbolication';
+
 import type {
   Category,
-  CodeFrame,
-  ComponentStack,
   Message,
+  ComponentStack,
+  CodeFrame,
 } from './parseLogBoxLog';
-
-import * as LogBoxSymbolication from './LogBoxSymbolication';
+import type {Stack} from './LogBoxSymbolication';
 
 type SymbolicationStatus = 'NONE' | 'PENDING' | 'COMPLETE' | 'FAILED';
 

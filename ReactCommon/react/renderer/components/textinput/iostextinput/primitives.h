@@ -7,8 +7,9 @@
 
 #pragma once
 
-#include <optional>
 #include <string>
+
+#include <butter/optional.h>
 
 namespace facebook {
 namespace react {
@@ -46,14 +47,6 @@ enum class ReturnKeyType {
   Route,
   Yahoo,
   Continue,
-};
-
-// iOS & Android.
-enum class SubmitBehavior {
-  Default,
-  Submit,
-  BlurAndSubmit,
-  Newline,
 };
 
 // iOS-only
@@ -113,7 +106,7 @@ class TextInputTraits final {
    * iOS & Android
    * Default value: `empty` (`null`).
    */
-  std::optional<bool> autoCorrect{};
+  butter::optional<bool> autoCorrect{};
 
   /*
    * iOS & Android
@@ -148,7 +141,7 @@ class TextInputTraits final {
    * Can be empty (`null` in JavaScript) which means `default`.
    * Default value: `empty` (`null`).
    */
-  std::optional<bool> spellCheck{};
+  butter::optional<bool> spellCheck{};
 
   /*
    * iOS & Android
@@ -178,9 +171,9 @@ class TextInputTraits final {
 
   /*
    * iOS & Android
-   * Default value: `Default`.
+   * Default value: `false`.
    */
-  SubmitBehavior submitBehavior{SubmitBehavior::Default};
+  bool blurOnSubmit{false};
 
   /*
    * iOS-only (implemented only on iOS for now)

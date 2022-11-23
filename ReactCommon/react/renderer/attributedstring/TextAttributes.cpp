@@ -15,7 +15,8 @@
 
 #include <react/renderer/debug/debugStringConvertibleUtils.h>
 
-namespace facebook::react {
+namespace facebook {
+namespace react {
 
 void TextAttributes::apply(TextAttributes textAttributes) {
   // Color
@@ -36,23 +37,20 @@ void TextAttributes::apply(TextAttributes textAttributes) {
   fontSizeMultiplier = !std::isnan(textAttributes.fontSizeMultiplier)
       ? textAttributes.fontSizeMultiplier
       : fontSizeMultiplier;
-  fontWeight = textAttributes.fontWeight.has_value() ? textAttributes.fontWeight
-                                                     : fontWeight;
-  fontStyle = textAttributes.fontStyle.has_value() ? textAttributes.fontStyle
-                                                   : fontStyle;
-  fontVariant = textAttributes.fontVariant.has_value()
+  fontWeight = textAttributes.fontWeight.hasValue() ? textAttributes.fontWeight
+                                                    : fontWeight;
+  fontStyle = textAttributes.fontStyle.hasValue() ? textAttributes.fontStyle
+                                                  : fontStyle;
+  fontVariant = textAttributes.fontVariant.hasValue()
       ? textAttributes.fontVariant
       : fontVariant;
-  allowFontScaling = textAttributes.allowFontScaling.has_value()
+  allowFontScaling = textAttributes.allowFontScaling.hasValue()
       ? textAttributes.allowFontScaling
       : allowFontScaling;
-  dynamicTypeRamp = textAttributes.dynamicTypeRamp.has_value()
-      ? textAttributes.dynamicTypeRamp
-      : dynamicTypeRamp;
   letterSpacing = !std::isnan(textAttributes.letterSpacing)
       ? textAttributes.letterSpacing
       : letterSpacing;
-  textTransform = textAttributes.textTransform.has_value()
+  textTransform = textAttributes.textTransform.hasValue()
       ? textAttributes.textTransform
       : textTransform;
 
@@ -60,28 +58,25 @@ void TextAttributes::apply(TextAttributes textAttributes) {
   lineHeight = !std::isnan(textAttributes.lineHeight)
       ? textAttributes.lineHeight
       : lineHeight;
-  alignment = textAttributes.alignment.has_value() ? textAttributes.alignment
-                                                   : alignment;
-  baseWritingDirection = textAttributes.baseWritingDirection.has_value()
+  alignment = textAttributes.alignment.hasValue() ? textAttributes.alignment
+                                                  : alignment;
+  baseWritingDirection = textAttributes.baseWritingDirection.hasValue()
       ? textAttributes.baseWritingDirection
       : baseWritingDirection;
-  lineBreakStrategy = textAttributes.lineBreakStrategy.has_value()
-      ? textAttributes.lineBreakStrategy
-      : lineBreakStrategy;
 
   // Decoration
   textDecorationColor = textAttributes.textDecorationColor
       ? textAttributes.textDecorationColor
       : textDecorationColor;
-  textDecorationLineType = textAttributes.textDecorationLineType.has_value()
+  textDecorationLineType = textAttributes.textDecorationLineType.hasValue()
       ? textAttributes.textDecorationLineType
       : textDecorationLineType;
-  textDecorationStyle = textAttributes.textDecorationStyle.has_value()
+  textDecorationStyle = textAttributes.textDecorationStyle.hasValue()
       ? textAttributes.textDecorationStyle
       : textDecorationStyle;
 
   // Shadow
-  textShadowOffset = textAttributes.textShadowOffset.has_value()
+  textShadowOffset = textAttributes.textShadowOffset.hasValue()
       ? textAttributes.textShadowOffset.value()
       : textShadowOffset;
   textShadowRadius = !std::isnan(textAttributes.textShadowRadius)
@@ -92,13 +87,13 @@ void TextAttributes::apply(TextAttributes textAttributes) {
       : textShadowColor;
 
   // Special
-  isHighlighted = textAttributes.isHighlighted.has_value()
+  isHighlighted = textAttributes.isHighlighted.hasValue()
       ? textAttributes.isHighlighted
       : isHighlighted;
-  layoutDirection = textAttributes.layoutDirection.has_value()
+  layoutDirection = textAttributes.layoutDirection.hasValue()
       ? textAttributes.layoutDirection
       : layoutDirection;
-  accessibilityRole = textAttributes.accessibilityRole.has_value()
+  accessibilityRole = textAttributes.accessibilityRole.hasValue()
       ? textAttributes.accessibilityRole
       : accessibilityRole;
 }
@@ -114,10 +109,8 @@ bool TextAttributes::operator==(const TextAttributes &rhs) const {
              fontStyle,
              fontVariant,
              allowFontScaling,
-             dynamicTypeRamp,
              alignment,
              baseWritingDirection,
-             lineBreakStrategy,
              textDecorationColor,
              textDecorationLineType,
              textDecorationStyle,
@@ -135,10 +128,8 @@ bool TextAttributes::operator==(const TextAttributes &rhs) const {
              rhs.fontStyle,
              rhs.fontVariant,
              rhs.allowFontScaling,
-             rhs.dynamicTypeRamp,
              rhs.alignment,
              rhs.baseWritingDirection,
-             rhs.lineBreakStrategy,
              rhs.textDecorationColor,
              rhs.textDecorationLineType,
              rhs.textDecorationStyle,
@@ -191,14 +182,12 @@ SharedDebugStringConvertibleList TextAttributes::getDebugProps() const {
       debugStringConvertibleItem("fontStyle", fontStyle),
       debugStringConvertibleItem("fontVariant", fontVariant),
       debugStringConvertibleItem("allowFontScaling", allowFontScaling),
-      debugStringConvertibleItem("dynamicTypeRamp", dynamicTypeRamp),
       debugStringConvertibleItem("letterSpacing", letterSpacing),
 
       // Paragraph Styles
       debugStringConvertibleItem("lineHeight", lineHeight),
       debugStringConvertibleItem("alignment", alignment),
       debugStringConvertibleItem("baseWritingDirection", baseWritingDirection),
-      debugStringConvertibleItem("lineBreakStrategyIOS", lineBreakStrategy),
 
       // Decoration
       debugStringConvertibleItem("textDecorationColor", textDecorationColor),
@@ -219,4 +208,5 @@ SharedDebugStringConvertibleList TextAttributes::getDebugProps() const {
 }
 #endif
 
-} // namespace facebook::react
+} // namespace react
+} // namespace facebook

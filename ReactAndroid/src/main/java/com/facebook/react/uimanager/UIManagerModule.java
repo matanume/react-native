@@ -40,6 +40,7 @@ import com.facebook.react.bridge.UiThreadUtil;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.common.MapBuilder;
 import com.facebook.react.common.ReactConstants;
+import com.facebook.react.config.ReactFeatureFlags;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.uimanager.common.ViewUtil;
 import com.facebook.react.uimanager.debug.NotThreadSafeViewHierarchyUpdateDebugListener;
@@ -115,9 +116,35 @@ public class UIManagerModule extends ReactContextBaseJavaModule
   private int mBatchId = 0;
   private int mNumRootViews = 0;
 
+  @SuppressWarnings("deprecated")
   public UIManagerModule(
       ReactApplicationContext reactContext,
       ViewManagerResolver viewManagerResolver,
+      int minTimeLeftInFrameForNonBatchedOperationMs) {
+    this(
+        reactContext,
+        viewManagerResolver,
+        new UIImplementationProvider(),
+        minTimeLeftInFrameForNonBatchedOperationMs);
+  }
+
+  @SuppressWarnings("deprecated")
+  public UIManagerModule(
+      ReactApplicationContext reactContext,
+      List<ViewManager> viewManagersList,
+      int minTimeLeftInFrameForNonBatchedOperationMs) {
+    this(
+        reactContext,
+        viewManagersList,
+        new UIImplementationProvider(),
+        minTimeLeftInFrameForNonBatchedOperationMs);
+  }
+
+  @Deprecated
+  public UIManagerModule(
+      ReactApplicationContext reactContext,
+      ViewManagerResolver viewManagerResolver,
+      UIImplementationProvider uiImplementationProvider,
       int minTimeLeftInFrameForNonBatchedOperationMs) {
     super(reactContext);
     DisplayMetricsHolder.initDisplayMetricsIfNotInitialized(reactContext);
@@ -126,7 +153,7 @@ public class UIManagerModule extends ReactContextBaseJavaModule
     mCustomDirectEvents = UIManagerModuleConstants.getDirectEventTypeConstants();
     mViewManagerRegistry = new ViewManagerRegistry(viewManagerResolver);
     mUIImplementation =
-        new UIImplementation(
+        uiImplementationProvider.createUIImplementation(
             reactContext,
             mViewManagerRegistry,
             mEventDispatcher,
@@ -135,9 +162,11 @@ public class UIManagerModule extends ReactContextBaseJavaModule
     reactContext.addLifecycleEventListener(this);
   }
 
+  @Deprecated
   public UIManagerModule(
       ReactApplicationContext reactContext,
       List<ViewManager> viewManagersList,
+      UIImplementationProvider uiImplementationProvider,
       int minTimeLeftInFrameForNonBatchedOperationMs) {
     super(reactContext);
     DisplayMetricsHolder.initDisplayMetricsIfNotInitialized(reactContext);
@@ -146,7 +175,7 @@ public class UIManagerModule extends ReactContextBaseJavaModule
     mModuleConstants = createConstants(viewManagersList, null, mCustomDirectEvents);
     mViewManagerRegistry = new ViewManagerRegistry(viewManagersList);
     mUIImplementation =
-        new UIImplementation(
+        uiImplementationProvider.createUIImplementation(
             reactContext,
             mViewManagerRegistry,
             mEventDispatcher,
@@ -179,7 +208,6 @@ public class UIManagerModule extends ReactContextBaseJavaModule
   @Override
   public void initialize() {
     getReactApplicationContext().registerComponentCallbacks(mMemoryTrimCallback);
-    getReactApplicationContext().registerComponentCallbacks(mViewManagerRegistry);
     mEventDispatcher.registerEventEmitter(
         DEFAULT, getReactApplicationContext().getJSModule(RCTEventEmitter.class));
   }
@@ -207,7 +235,6 @@ public class UIManagerModule extends ReactContextBaseJavaModule
 
     ReactApplicationContext reactApplicationContext = getReactApplicationContext();
     reactApplicationContext.unregisterComponentCallbacks(mMemoryTrimCallback);
-    reactApplicationContext.unregisterComponentCallbacks(mViewManagerRegistry);
     YogaNodePool.get().clear();
     ViewManagerPropertyUpdater.clear();
   }
@@ -261,6 +288,16 @@ public class UIManagerModule extends ReactContextBaseJavaModule
   @Deprecated
   @Override
   public void preInitializeViewManagers(List<String> viewManagerNames) {
+    if (ReactFeatureFlags.enableExperimentalStaticViewConfigs) {
+      for (String viewManagerName : viewManagerNames) {
+        mUIImplementation.resolveViewManager(viewManagerName);
+      }
+      // When Static view configs are enabled it is not necessary to pre-compute the constants for
+      // viewManagers, although the pre-initialization of viewManager objects is still necessary
+      // for performance reasons.
+      return;
+    }
+
     Map<String, WritableMap> constantsMap = new ArrayMap<>();
     for (String viewManagerName : viewManagerNames) {
       WritableMap constants = computeConstantsForViewManager(viewManagerName);
@@ -899,7 +936,7 @@ public class UIManagerModule extends ReactContextBaseJavaModule
   }
 
   /** Listener that drops the CSSNode pool on low memory when the app is backgrounded. */
-  private static class MemoryTrimCallback implements ComponentCallbacks2 {
+  private class MemoryTrimCallback implements ComponentCallbacks2 {
 
     @Override
     public void onTrimMemory(int level) {

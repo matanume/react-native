@@ -8,7 +8,6 @@
 #import "RCTViewComponentView.h"
 
 #import <CoreGraphics/CoreGraphics.h>
-#import <QuartzCore/QuartzCore.h>
 #import <objc/runtime.h>
 
 #import <React/RCTAssert.h>
@@ -30,6 +29,8 @@ using namespace facebook::react;
   NSSet<NSString *> *_Nullable _propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN;
 }
 
+@synthesize removeClippedSubviews = _removeClippedSubviews;
+
 - (instancetype)initWithFrame:(CGRect)frame
 {
   if (self = [super initWithFrame:frame]) {
@@ -41,7 +42,7 @@ using namespace facebook::react;
   return self;
 }
 
-- (facebook::react::Props::Shared)props
+- (facebook::react::SharedProps)props
 {
   return _props;
 }
@@ -295,12 +296,6 @@ using namespace facebook::react;
     self.accessibilityElement.accessibilityLabel = RCTNSStringFromStringNilIfEmpty(newViewProps.accessibilityLabel);
   }
 
-  // `accessibilityLanguage`
-  if (oldViewProps.accessibilityLanguage != newViewProps.accessibilityLanguage) {
-    self.accessibilityElement.accessibilityLanguage =
-        RCTNSStringFromStringNilIfEmpty(newViewProps.accessibilityLanguage);
-  }
-
   // `accessibilityHint`
   if (oldViewProps.accessibilityHint != newViewProps.accessibilityHint) {
     self.accessibilityElement.accessibilityHint = RCTNSStringFromStringNilIfEmpty(newViewProps.accessibilityHint);
@@ -340,12 +335,12 @@ using namespace facebook::react;
 
   // `accessibilityValue`
   if (oldViewProps.accessibilityValue != newViewProps.accessibilityValue) {
-    if (newViewProps.accessibilityValue.text.has_value()) {
+    if (newViewProps.accessibilityValue.text.hasValue()) {
       self.accessibilityElement.accessibilityValue =
           RCTNSStringFromStringNilIfEmpty(newViewProps.accessibilityValue.text.value());
     } else if (
-        newViewProps.accessibilityValue.now.has_value() && newViewProps.accessibilityValue.min.has_value() &&
-        newViewProps.accessibilityValue.max.has_value()) {
+        newViewProps.accessibilityValue.now.hasValue() && newViewProps.accessibilityValue.min.hasValue() &&
+        newViewProps.accessibilityValue.max.hasValue()) {
       CGFloat val = (CGFloat)(newViewProps.accessibilityValue.now.value()) /
           (newViewProps.accessibilityValue.max.value() - newViewProps.accessibilityValue.min.value());
       self.accessibilityElement.accessibilityValue =
@@ -515,18 +510,6 @@ static void RCTReleaseRCTBorderColors(RCTBorderColors borderColors)
   CGColorRelease(borderColors.right);
 }
 
-static CALayerCornerCurve CornerCurveFromBorderCurve(BorderCurve borderCurve)
-{
-  // The constants are available only starting from iOS 13
-  // CALayerCornerCurve is a typealias on NSString *
-  switch (borderCurve) {
-    case BorderCurve::Continuous:
-      return @"continuous"; // kCACornerCurveContinuous;
-    case BorderCurve::Circular:
-      return @"circular"; // kCACornerCurveCircular;
-  }
-}
-
 static RCTBorderStyle RCTBorderStyleFromBorderStyle(BorderStyle borderStyle)
 {
   switch (borderStyle) {
@@ -591,9 +574,6 @@ static RCTBorderStyle RCTBorderStyleFromBorderStyle(BorderStyle borderStyle)
     layer.borderColor = borderColor;
     CGColorRelease(borderColor);
     layer.cornerRadius = (CGFloat)borderMetrics.borderRadii.topLeft;
-    if (@available(iOS 13.0, *)) {
-      layer.cornerCurve = CornerCurveFromBorderCurve(borderMetrics.borderCurves.topLeft);
-    }
     layer.backgroundColor = _backgroundColor.CGColor;
   } else {
     if (!_borderLayer) {

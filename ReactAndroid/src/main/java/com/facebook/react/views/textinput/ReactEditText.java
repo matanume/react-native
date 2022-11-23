@@ -95,13 +95,13 @@ public class ReactEditText extends AppCompatEditText
   private @Nullable TextWatcherDelegator mTextWatcherDelegator;
   private int mStagedInputType;
   protected boolean mContainsImages;
-  private @Nullable String mSubmitBehavior = null;
+  private @Nullable Boolean mBlurOnSubmit;
   private boolean mDisableFullscreen;
   private @Nullable String mReturnKeyType;
   private @Nullable SelectionWatcher mSelectionWatcher;
   private @Nullable ContentSizeWatcher mContentSizeWatcher;
   private @Nullable ScrollWatcher mScrollWatcher;
-  private InternalKeyListener mKeyListener;
+  private final InternalKeyListener mKeyListener;
   private boolean mDetectScrollMovement = false;
   private boolean mOnKeyPress = false;
   private TextAttributes mTextAttributes;
@@ -114,7 +114,8 @@ public class ReactEditText extends AppCompatEditText
 
   private ReactViewBackgroundManager mReactBackgroundManager;
 
-  private final FabricViewStateManager mFabricViewStateManager = new FabricViewStateManager();
+  private final @Nullable FabricViewStateManager mFabricViewStateManager =
+      new FabricViewStateManager();
   protected boolean mDisableTextDiffing = false;
 
   protected boolean mIsSettingTextFromState = false;
@@ -135,13 +136,12 @@ public class ReactEditText extends AppCompatEditText
     mDefaultGravityVertical = getGravity() & Gravity.VERTICAL_GRAVITY_MASK;
     mNativeEventCount = 0;
     mIsSettingTextFromJS = false;
+    mBlurOnSubmit = null;
     mDisableFullscreen = false;
     mListeners = null;
     mTextWatcherDelegator = null;
     mStagedInputType = getInputType();
-    if (mKeyListener == null) {
-      mKeyListener = new InternalKeyListener();
-    }
+    mKeyListener = new InternalKeyListener();
     mScrollWatcher = null;
     mTextAttributes = new TextAttributes();
 
@@ -154,9 +154,9 @@ public class ReactEditText extends AppCompatEditText
       setLayerType(View.LAYER_TYPE_SOFTWARE, null);
     }
 
-    ReactAccessibilityDelegate editTextAccessibilityDelegate =
-        new ReactAccessibilityDelegate(
-            this, this.isFocusable(), this.getImportantForAccessibility()) {
+    ViewCompat.setAccessibilityDelegate(
+        this,
+        new ReactAccessibilityDelegate() {
           @Override
           public boolean performAccessibilityAction(View host, int action, Bundle args) {
             if (action == AccessibilityNodeInfo.ACTION_CLICK) {
@@ -172,8 +172,7 @@ public class ReactEditText extends AppCompatEditText
             }
             return super.performAccessibilityAction(host, action, args);
           }
-        };
-    ViewCompat.setAccessibilityDelegate(this, editTextAccessibilityDelegate);
+        });
   }
 
   @Override
@@ -255,7 +254,7 @@ public class ReactEditText extends AppCompatEditText
               inputConnection, reactContext, this, mEventDispatcher);
     }
 
-    if (isMultiline() && (shouldBlurOnReturn() || shouldSubmitOnReturn())) {
+    if (isMultiline() && getBlurOnSubmit()) {
       // Remove IME_FLAG_NO_ENTER_ACTION to keep the original IME_OPTION
       outAttrs.imeOptions &= ~EditorInfo.IME_FLAG_NO_ENTER_ACTION;
     }
@@ -379,52 +378,21 @@ public class ReactEditText extends AppCompatEditText
     mSelectionWatcher = selectionWatcher;
   }
 
+  public void setBlurOnSubmit(@Nullable Boolean blurOnSubmit) {
+    mBlurOnSubmit = blurOnSubmit;
+  }
+
   public void setOnKeyPress(boolean onKeyPress) {
     mOnKeyPress = onKeyPress;
   }
 
-  public boolean shouldBlurOnReturn() {
-    String submitBehavior = getSubmitBehavior();
-    boolean shouldBlur;
-
-    // Default shouldBlur
-    if (submitBehavior == null) {
-      if (!isMultiline()) {
-        shouldBlur = true;
-      } else {
-        shouldBlur = false;
-      }
-    } else {
-      shouldBlur = submitBehavior.equals("blurAndSubmit");
+  public boolean getBlurOnSubmit() {
+    if (mBlurOnSubmit == null) {
+      // Default blurOnSubmit
+      return isMultiline() ? false : true;
     }
 
-    return shouldBlur;
-  }
-
-  public boolean shouldSubmitOnReturn() {
-    String submitBehavior = getSubmitBehavior();
-    boolean shouldSubmit;
-
-    // Default shouldSubmit
-    if (submitBehavior == null) {
-      if (!isMultiline()) {
-        shouldSubmit = true;
-      } else {
-        shouldSubmit = false;
-      }
-    } else {
-      shouldSubmit = submitBehavior.equals("submit") || submitBehavior.equals("blurAndSubmit");
-    }
-
-    return shouldSubmit;
-  }
-
-  public String getSubmitBehavior() {
-    return mSubmitBehavior;
-  }
-
-  public void setSubmitBehavior(String submitBehavior) {
-    mSubmitBehavior = submitBehavior;
+    return mBlurOnSubmit;
   }
 
   public void setDisableFullscreenUI(boolean disableFullscreenUI) {
@@ -483,10 +451,6 @@ public class ReactEditText extends AppCompatEditText
     // We override the KeyListener so that all keys on the soft input keyboard as well as hardware
     // keyboards work. Some KeyListeners like DigitsKeyListener will display the keyboard but not
     // accept all input from it
-    if (mKeyListener == null) {
-      mKeyListener = new InternalKeyListener();
-    }
-
     mKeyListener.setInputType(type);
     setKeyListener(mKeyListener);
   }
@@ -786,7 +750,6 @@ public class ReactEditText extends AppCompatEditText
     if (mFabricViewStateManager != null
         && !mFabricViewStateManager.hasStateWrapper()
         && !reactContext.isBridgeless()) {
-
       final ReactTextInputLocalData localData = new ReactTextInputLocalData(this);
       UIManagerModule uiManager = reactContext.getNativeModule(UIManagerModule.class);
       if (uiManager != null) {
@@ -951,10 +914,6 @@ public class ReactEditText extends AppCompatEditText
     mReactBackgroundManager.setBorderColor(position, color, alpha);
   }
 
-  public int getBorderColor(int position) {
-    return mReactBackgroundManager.getBorderColor(position);
-  }
-
   public void setBorderRadius(float borderRadius) {
     mReactBackgroundManager.setBorderRadius(borderRadius);
   }
@@ -1022,7 +981,7 @@ public class ReactEditText extends AppCompatEditText
    */
   private void updateCachedSpannable(boolean resetStyles) {
     // Noops in non-Fabric
-    if (mFabricViewStateManager == null || !mFabricViewStateManager.hasStateWrapper()) {
+    if (mFabricViewStateManager != null && !mFabricViewStateManager.hasStateWrapper()) {
       return;
     }
     // If this view doesn't have an ID yet, we don't have a cache key, so bail here

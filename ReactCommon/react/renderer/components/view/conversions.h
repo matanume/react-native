@@ -8,6 +8,7 @@
 #pragma once
 
 #include <butter/map.h>
+#include <butter/optional.h>
 #include <folly/Conv.h>
 #include <folly/dynamic.h>
 #include <glog/logging.h>
@@ -15,13 +16,13 @@
 #include <react/renderer/components/view/primitives.h>
 #include <react/renderer/core/LayoutMetrics.h>
 #include <react/renderer/core/PropsParserContext.h>
+#include <react/renderer/graphics/Geometry.h>
 #include <react/renderer/graphics/Transform.h>
 #include <stdlib.h>
 #include <yoga/YGEnums.h>
 #include <yoga/YGNode.h>
 #include <yoga/Yoga.h>
 #include <cmath>
-#include <optional>
 
 namespace facebook {
 namespace react {
@@ -97,9 +98,9 @@ inline YGValue yogaStyleValueFromFloat(
   return {(float)value, unit};
 }
 
-inline std::optional<Float> optionalFloatFromYogaValue(
+inline butter::optional<Float> optionalFloatFromYogaValue(
     const YGValue value,
-    std::optional<Float> base = {}) {
+    butter::optional<Float> base = {}) {
   switch (value.unit) {
     case YGUnitUndefined:
       return {};
@@ -107,8 +108,9 @@ inline std::optional<Float> optionalFloatFromYogaValue(
       return floatFromYogaFloat(value.value);
     case YGUnitPercent:
       return base.has_value()
-          ? std::optional<Float>(base.value() * floatFromYogaFloat(value.value))
-          : std::optional<Float>();
+          ? butter::optional<Float>(
+                base.value() * floatFromYogaFloat(value.value))
+          : butter::optional<Float>();
     case YGUnitAuto:
       return {};
   }
@@ -391,11 +393,8 @@ inline void fromRawValue(
             YGUnitPercent};
         return;
       } else {
-        auto tryValue = folly::tryTo<float>(stringValue);
-        if (tryValue.hasValue()) {
-          result = YGValue{tryValue.value(), YGUnitPoint};
-          return;
-        }
+        result = YGValue{folly::to<float>(stringValue), YGUnitPoint};
+        return;
       }
     }
   }
@@ -559,24 +558,6 @@ inline void fromRawValue(
     return;
   }
   LOG(FATAL) << "Could not parse BackfaceVisibility:" << stringValue;
-  react_native_assert(false);
-}
-
-inline void fromRawValue(
-    const PropsParserContext &context,
-    const RawValue &value,
-    BorderCurve &result) {
-  react_native_assert(value.hasType<std::string>());
-  auto stringValue = (std::string)value;
-  if (stringValue == "circular") {
-    result = BorderCurve::Circular;
-    return;
-  }
-  if (stringValue == "continuous") {
-    result = BorderCurve::Continuous;
-    return;
-  }
-  LOG(FATAL) << "Could not parse BorderCurve:" << stringValue;
   react_native_assert(false);
 }
 

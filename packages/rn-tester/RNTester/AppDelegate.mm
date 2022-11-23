@@ -63,6 +63,7 @@
 #endif
 
 #import <ReactCommon/RCTTurboModuleManager.h>
+
 #import "RNTesterTurboModuleProvider.h"
 
 @interface AppDelegate () <RCTCxxBridgeDelegate, RCTTurboModuleManagerDelegate> {
@@ -76,8 +77,6 @@
 }
 @end
 
-static NSString *const kRNConcurrentRoot = @"concurrentRoot";
-
 @implementation AppDelegate
 
 - (BOOL)application:(__unused UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
@@ -87,7 +86,12 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
   _bridge = [[RCTBridge alloc] initWithDelegate:self launchOptions:launchOptions];
 
   // Appetizer.io params check
-  NSDictionary *initProps = [self prepareInitialProps];
+  NSDictionary *initProps = @{};
+  NSString *_routeUri = [[NSUserDefaults standardUserDefaults] stringForKey:@"route"];
+  if (_routeUri) {
+    initProps =
+        @{@"exampleFromAppetizeParams" : [NSString stringWithFormat:@"rntester://example/%@Example", _routeUri]};
+  }
 
 #ifdef RN_FABRIC_ENABLED
   _contextContainer = std::make_shared<facebook::react::ContextContainer const>();
@@ -113,28 +117,6 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
   [self.window makeKeyAndVisible];
   [self initializeFlipper:application];
   return YES;
-}
-
-- (BOOL)concurrentRootEnabled
-{
-  // Switch this bool to turn on and off the concurrent root
-  return true;
-}
-
-- (NSDictionary *)prepareInitialProps
-{
-  NSMutableDictionary *initProps = [NSMutableDictionary new];
-
-  NSString *_routeUri = [[NSUserDefaults standardUserDefaults] stringForKey:@"route"];
-  if (_routeUri) {
-    initProps[@"exampleFromAppetizeParams"] = [NSString stringWithFormat:@"rntester://example/%@Example", _routeUri];
-  }
-
-#ifdef RCT_NEW_ARCH_ENABLED
-  initProps[kRNConcurrentRoot] = @([self concurrentRootEnabled]);
-#endif
-
-  return initProps;
 }
 
 - (NSURL *)sourceURLForBridge:(__unused RCTBridge *)bridge
