@@ -47,7 +47,7 @@ def get_script_template(react_native_path, export_vars={})
         SCRIPT_PHASES_SCRIPT="$RCT_SCRIPT_RN_DIR/scripts/react_native_pods_utils/script_phases.sh"
         /bin/sh -c "$SCRIPT_PHASES_SCRIPT"
         EOS
-    result = ERB.new(template, 0, '->').result(binding)
+    result = ERB.new(template, trim_mode: '->').result(binding)
     # puts result
     return result
 end
